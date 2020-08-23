@@ -22,7 +22,7 @@ namespace VariantWorkshopIncome
         }
         protected override void OnBeforeInitialModuleScreenSetAsRoot()
         {
-            InformationManager.DisplayMessage(new InformationMessage("Variant Workshop Income v1.0 by m1g4c"));
+            InformationManager.DisplayMessage(new InformationMessage("Variant Workshop Income v1.0.1 by m1g4c"));
         }
 
         private void StartTheGame(Game game)
