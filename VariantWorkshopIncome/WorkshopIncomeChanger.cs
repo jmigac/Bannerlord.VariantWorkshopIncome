@@ -10,7 +10,11 @@ namespace VariantWorkshopIncome
 {
     class WorkshopIncomeChanger : CampaignBehaviorBase
     {
+        ///Approximation for realtime and ingame difference in gold
         private int INGAME_VALUE_INCREMENT = 5;
+        /// <summary>
+        ///Function for reading configuration parameters and adding (calling) Daily tick function for changing workshop income. 
+        /// </summary>
         public override void RegisterEvents()
         {
             int min = int.Parse(ConfigReader.GetInstance().Get("MinimumCapitalFromWorkshop"));
@@ -22,6 +26,12 @@ namespace VariantWorkshopIncome
         public override void SyncData(IDataStore dataStore)
         {
         }
+        /// <summary>
+        /// Function for changing workshop income
+        /// </summary>
+        /// <param name="min">Minimum acceptable workshop income</param>
+        /// <param name="max">Maximum acceptable workshop income</param>
+        /// <param name="boundVillageIncrement">Bonus for village production</param>
         private void ChangeWorkshopIncome(int min, int max, int boundVillageIncrement)
         {
             foreach (Workshop w in Hero.MainHero.OwnedWorkshops)
@@ -40,11 +50,20 @@ namespace VariantWorkshopIncome
                     
             }
         }
+        /// <summary>
+        /// Change workshop income
+        /// </summary>
+        /// <param name="w">Workshop</param>
+        /// <param name="v">integer for changing workshop income</param>
         private void ChangeWorkshopIncomeValue(Workshop w, int v)
         {
             w.ChangeGold(v);
         }
-
+        /// <summary>
+        /// Function for checking if any village has the same production output as chosen workshop has inputs.
+        /// </summary>
+        /// <param name="w">Workshop of interest</param>
+        /// <returns>True if exists, any other case returns False</returns>
         private bool CheckIfBoundVillagesCreatesMaterial(Workshop w)
         {
             TaleWorlds.CampaignSystem.WorkshopType workshopType = w.WorkshopType;

@@ -10,6 +10,7 @@ namespace VariantWorkshopIncome
 {
     class ConfigReader
     {
+
         public static ConfigReader _INSTANCE;
         public ConfigReader()
         {
