@@ -10,19 +10,31 @@ namespace VariantWorkshopIncome
 {
     class WorkshopIncomeChanger : CampaignBehaviorBase
     {
+        ///Approximation for realtime and ingame difference in gold
         private int INGAME_VALUE_INCREMENT = 5;
+        /// <summary>
+        ///Function for reading configuration parameters and adding (calling) Daily tick function for changing workshop income. 
+        /// </summary>
         public override void RegisterEvents()
         {
             int min = int.Parse(ConfigReader.GetInstance().Get("MinimumCapitalFromWorkshop"));
             int max = int.Parse(ConfigReader.GetInstance().Get("MaximumCapitalFromWorkshop"));
             int boundVillageIncrement = int.Parse(ConfigReader.GetInstance().Get("BoundVillageWorkshopIncrement"))* INGAME_VALUE_INCREMENT;
-            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, (Action) (()=> this.ChangeWorkshopIncome(min,max,boundVillageIncrement)));
+            int levelBonus = int.Parse(ConfigReader.GetInstance().Get("BonusCreditsPerWorkshopLevel")) * INGAME_VALUE_INCREMENT;
+            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, (Action) (()=> this.ChangeWorkshopIncome(min,max,boundVillageIncrement,levelBonus)));
         }
 
         public override void SyncData(IDataStore dataStore)
         {
         }
-        private void ChangeWorkshopIncome(int min, int max, int boundVillageIncrement)
+        /// <summary>
+        /// Function for changing workshop income
+        /// </summary>
+        /// <param name="min">Minimum acceptable workshop income</param>
+        /// <param name="max">Maximum acceptable workshop income</param>
+        /// <param name="boundVillageIncrement">Bonus for village production</param>
+        /// <param name="levelBonus">Level bonus in gold per workshop level</param>
+        private void ChangeWorkshopIncome(int min, int max, int boundVillageIncrement,int levelBonus)
         {
             foreach (Workshop w in Hero.MainHero.OwnedWorkshops)
             {
@@ -31,20 +43,66 @@ namespace VariantWorkshopIncome
                 int increaseValue = ((changeValue * INGAME_VALUE_INCREMENT) - w.Capital + w.InitialCapital);
                 if (status)
                 {
-                    ChangeWorkshopIncomeValue(w, increaseValue + boundVillageIncrement);
+                    ChangeWorkshopIncomeValue(w, increaseValue + boundVillageIncrement+(levelBonus*w.Level));
                 }
                 else
                 {
-                    ChangeWorkshopIncomeValue(w, increaseValue);
+                    ChangeWorkshopIncomeValue(w, increaseValue + (levelBonus * w.Level));
                 }
-                    
+                UpgradeWorkshop(w);    
             }
         }
+        /// <summary>
+        /// Function for upgrading workshop from level 1 till level 4 based on workshop capital.
+        /// </summary>
+        /// <param name="w">Chosen workshop</param>
+        private void UpgradeWorkshop(Workshop w)
+        {
+            if (w.Level == 1 && w.Capital > 500000 && w.CanBeUpgraded)
+            {
+                DisplayMessage($"Workshop in {w.Settlement.Name.ToString()} has been promoted at level 1");
+                w.Upgrade();
+            }
+            else if (w.Level == 2 && w.Capital > 1000000 && w.CanBeUpgraded)
+            {
+                DisplayMessage($"Workshop in {w.Settlement.Name.ToString()} has been promoted at level 2");
+                w.Upgrade();
+            }
+            else if (w.Level == 3 && w.Capital > 2000000 && w.CanBeUpgraded)
+            {
+                DisplayMessage($"Workshop in {w.Settlement.Name.ToString()} has been promoted at level 3");
+                w.Upgrade();
+            }
+            else if (w.Level == 4 && w.Capital > 5000000 && w.CanBeUpgraded)
+            {
+                DisplayMessage($"Workshop in {w.Settlement.Name.ToString()} has been promoted at level 4");
+                w.Upgrade();
+            }
+            else if (w.Level == 5 && w.Capital > 10000000 && w.CanBeUpgraded)
+            {
+                DisplayMessage($"Workshop in {w.Settlement.Name.ToString()} has been promoted at level 5");
+                w.Upgrade();
+            }
+        }
+        private void DisplayMessage(string message)
+        {
+            InformationManager.DisplayMessage(new InformationMessage(message));
+        }
+
+        /// <summary>
+        /// Change workshop income
+        /// </summary>
+        /// <param name="w">Workshop</param>
+        /// <param name="v">integer for changing workshop income</param>
         private void ChangeWorkshopIncomeValue(Workshop w, int v)
         {
             w.ChangeGold(v);
         }
-
+        /// <summary>
+        /// Function for checking if any village has the same production output as chosen workshop has inputs.
+        /// </summary>
+        /// <param name="w">Workshop of interest</param>
+        /// <returns>True if exists, any other case returns False</returns>
         private bool CheckIfBoundVillagesCreatesMaterial(Workshop w)
         {
             TaleWorlds.CampaignSystem.WorkshopType workshopType = w.WorkshopType;
