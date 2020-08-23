@@ -21,9 +21,15 @@ namespace VariantWorkshopIncome
             int max = int.Parse(ConfigReader.GetInstance().Get("MaximumCapitalFromWorkshop"));
             int boundVillageIncrement = int.Parse(ConfigReader.GetInstance().Get("BoundVillageWorkshopIncrement"))* INGAME_VALUE_INCREMENT;
             int levelBonus = int.Parse(ConfigReader.GetInstance().Get("BonusCreditsPerWorkshopLevel")) * INGAME_VALUE_INCREMENT;
-            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, (Action) (()=> this.ChangeWorkshopIncome(min,max,boundVillageIncrement,levelBonus)));
+            bool workshopLevelingStatus = ConfigReader.GetInstance().Get("MinimumCapitalFromWorkshop") == "YES" ? true : false;
+            int[] workshopBorderLevelCapital = new int[5];
+            workshopBorderLevelCapital[0] = int.Parse(ConfigReader.GetInstance().Get("WorkshopLevel1"));
+            workshopBorderLevelCapital[1] = int.Parse(ConfigReader.GetInstance().Get("WorkshopLevel2"));
+            workshopBorderLevelCapital[2] = int.Parse(ConfigReader.GetInstance().Get("WorkshopLevel3"));
+            workshopBorderLevelCapital[3] = int.Parse(ConfigReader.GetInstance().Get("WorkshopLevel4"));
+            workshopBorderLevelCapital[4] = int.Parse(ConfigReader.GetInstance().Get("WorkshopLevel5"));
+            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, (Action) (()=> this.ChangeWorkshopIncome(min,max,boundVillageIncrement,levelBonus,workshopBorderLevelCapital,workshopLevelingStatus)));
         }
-
         public override void SyncData(IDataStore dataStore)
         {
         }
@@ -34,7 +40,7 @@ namespace VariantWorkshopIncome
         /// <param name="max">Maximum acceptable workshop income</param>
         /// <param name="boundVillageIncrement">Bonus for village production</param>
         /// <param name="levelBonus">Level bonus in gold per workshop level</param>
-        private void ChangeWorkshopIncome(int min, int max, int boundVillageIncrement,int levelBonus)
+        private void ChangeWorkshopIncome(int min, int max, int boundVillageIncrement,int levelBonus,int[] workshopLevels,bool useWorkshopLeveling)
         {
             foreach (Workshop w in Hero.MainHero.OwnedWorkshops)
             {
@@ -49,36 +55,37 @@ namespace VariantWorkshopIncome
                 {
                     ChangeWorkshopIncomeValue(w, increaseValue + (levelBonus * w.Level));
                 }
-                UpgradeWorkshop(w);    
+                if(useWorkshopLeveling)
+                    UpgradeWorkshop(w,workshopLevels);    
             }
         }
         /// <summary>
         /// Function for upgrading workshop from level 1 till level 4 based on workshop capital.
         /// </summary>
         /// <param name="w">Chosen workshop</param>
-        private void UpgradeWorkshop(Workshop w)
+        private void UpgradeWorkshop(Workshop w,int[] workshopLevels)
         {
-            if (w.Level == 1 && w.Capital > 500000 && w.CanBeUpgraded)
+            if (w.Level == 1 && w.Capital >= workshopLevels[0] && w.CanBeUpgraded)
             {
                 DisplayMessage($"Workshop in {w.Settlement.Name.ToString()} has been promoted at level 1");
                 w.Upgrade();
             }
-            else if (w.Level == 2 && w.Capital > 1000000 && w.CanBeUpgraded)
+            else if (w.Level == 2 && w.Capital >= workshopLevels[1] && w.CanBeUpgraded)
             {
                 DisplayMessage($"Workshop in {w.Settlement.Name.ToString()} has been promoted at level 2");
                 w.Upgrade();
             }
-            else if (w.Level == 3 && w.Capital > 2000000 && w.CanBeUpgraded)
+            else if (w.Level == 3 && w.Capital >= workshopLevels[2] && w.CanBeUpgraded)
             {
                 DisplayMessage($"Workshop in {w.Settlement.Name.ToString()} has been promoted at level 3");
                 w.Upgrade();
             }
-            else if (w.Level == 4 && w.Capital > 5000000 && w.CanBeUpgraded)
+            else if (w.Level == 4 && w.Capital >= workshopLevels[3] && w.CanBeUpgraded)
             {
                 DisplayMessage($"Workshop in {w.Settlement.Name.ToString()} has been promoted at level 4");
                 w.Upgrade();
             }
-            else if (w.Level == 5 && w.Capital > 10000000 && w.CanBeUpgraded)
+            else if (w.Level == 5 && w.Capital >= workshopLevels[4] && w.CanBeUpgraded)
             {
                 DisplayMessage($"Workshop in {w.Settlement.Name.ToString()} has been promoted at level 5");
                 w.Upgrade();
